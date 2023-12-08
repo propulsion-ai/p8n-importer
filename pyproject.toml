@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "p8n-importer"
+version = "1.0.0"
+description = "A tool to import various dataset formats and upload them to the PropulsionAI platform."
+readme = "README.md"
+authors = [
+    { name = "PropulsionAI", email = "hello@propulsionhq.com" },
+]
+requires-python = ">=3.7"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+packages = ["src"]
+
+[project.scripts]
+p8n-importer = "src.cli:main"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
