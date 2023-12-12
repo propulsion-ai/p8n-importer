@@ -2,10 +2,12 @@
 import argparse
 import logging
 import os
+import shutil
 import tempfile
 from getpass import getpass
 
 from src.config.logging import setup_logger
+from src.formats.parquet_importer import ParquetImporter
 from src.formats.voc_importer import VOCImporter
 from src.uploader import upload_dataset
 from src.utilities.file import load_json
@@ -63,6 +65,7 @@ def main():
     parser.add_argument("format", help="Dataset format (e.g., 'voc', 'yolo')")
     parser.add_argument("source_folder", help="Path to the source dataset folder")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
+    parser.add_argument("--no-upload", action="store_true", help="Skip uploading the converted dataset to the platform")
     parser.add_argument("--visualize", action="store_true", help="Visualize the converted dataset before uploading")
 
     args = parser.parse_args()
@@ -79,6 +82,8 @@ def main():
     with tempfile.TemporaryDirectory() as temp_output_folder:
         if args.format.lower() == 'voc':
             importer = VOCImporter(args.source_folder, temp_output_folder)
+        elif args.format.lower() == 'parquet':
+            importer = ParquetImporter(args.source_folder, temp_output_folder)
         # Add other format conditions here
         else:
             raise ValueError("Unsupported format")
@@ -90,7 +95,17 @@ def main():
             json_data = load_json(os.path.join(temp_output_folder, 'dataset.json'))
             visualize(json_data, temp_output_folder)
         
-        upload_dataset(temp_output_folder, dataset_id, api_key)
+        if args.no_upload:
+            print("Saving converted dataset...")
+            output_folder = "conversion_output"  # Specify the name of the output folder
+            # Create the output folder if it doesn't exist
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
+
+            # Copy the contents of temp_output_folder to the output folder
+            shutil.copytree(temp_output_folder, os.path.join(output_folder, os.path.basename(temp_output_folder)))
+        else:
+            upload_dataset(temp_output_folder, dataset_id, api_key)
 
 if __name__ == "__main__":
     main()
