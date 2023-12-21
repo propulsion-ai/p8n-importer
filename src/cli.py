@@ -7,8 +7,9 @@ import tempfile
 from getpass import getpass
 
 from src.config.logging import setup_logger
-from src.formats.parquet_importer import ParquetImporter
+from src.formats.coco_json_importer import COCOImporter
 from src.formats.voc_importer import VOCImporter
+from src.formats.yolov8_importer import YOLOv8Importer
 from src.uploader import upload_dataset
 from src.utilities.file import load_json
 from src.utilities.visualize import visualize_dataset
@@ -62,7 +63,7 @@ def main():
     print("This tool will help you import datasets into the PropulsionAI platform.\n")
 
     parser = argparse.ArgumentParser(description="PropulsionAI Dataset Importer")
-    parser.add_argument("format", help="Dataset format (e.g., 'voc', 'yolo')")
+    parser.add_argument("format", help="Dataset format (e.g., 'voc', 'yolov8', 'coco_json')")
     parser.add_argument("source_folder", help="Path to the source dataset folder")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument("--no-upload", action="store_true", help="Skip uploading the converted dataset to the platform")
@@ -82,8 +83,10 @@ def main():
     with tempfile.TemporaryDirectory() as temp_output_folder:
         if args.format.lower() == 'voc':
             importer = VOCImporter(args.source_folder, temp_output_folder)
-        elif args.format.lower() == 'parquet':
-            importer = ParquetImporter(args.source_folder, temp_output_folder)
+        elif args.format.lower() == 'coco_json':
+            importer = COCOImporter(args.source_folder, temp_output_folder)
+        elif args.format.lower() == 'yolov8':
+            importer = YOLOv8Importer(args.source_folder, temp_output_folder)
         # Add other format conditions here
         else:
             raise ValueError("Unsupported format")

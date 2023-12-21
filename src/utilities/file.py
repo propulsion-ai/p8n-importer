@@ -30,6 +30,7 @@ def generate_search_paths(full_path, source_path):
             combined_path = os.path.join(*source_path_parts[:i], *full_path_parts[j:])
             search_paths.add(combined_path)
 
+    search_paths.add(source_path)
     return list(search_paths)
 
 def find_file(full_path, source_path):

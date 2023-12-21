@@ -30,6 +30,8 @@ class VOCImporter(BaseImporter):
 
         for annotation_file in os.listdir(self.source_folder):
             if annotation_file.endswith('.xml'):
+                logger.info(f"Processing annotation file: {annotation_file}")
+
                 tree = ET.parse(os.path.join(self.source_folder, annotation_file))
                 root = tree.getroot()
 
@@ -41,7 +43,7 @@ class VOCImporter(BaseImporter):
                     # Copy image file to files folder
                     shutil.copy2(image_path, target_image_path)
                 except FileNotFoundError:
-                    logger.warning(f"Image file not found: {image_path}. Searching alternative paths...")
+                    logger.warning(f"Image file not found: {image_path} Searching alternative paths...")
                     new_path = find_file(image_path, self.source_folder)
                     if new_path:
                         try:
