@@ -10,9 +10,9 @@ from src.config.logging import setup_logger
 from src.formats.coco_json_importer import COCOImporter
 from src.formats.voc_importer import VOCImporter
 from src.formats.yolov8_importer import YOLOv8Importer
+from src.formats.classification_importer import ImageClassificationImporter
 from src.uploader import upload_dataset
 from src.utilities.file import load_json
-from src.utilities.visualize import visualize_dataset
 
 
 def get_api_key():
@@ -41,7 +41,7 @@ def get_dataset_id():
         # dataset_id = create_new_dataset(api_key, name, description, input_type, action_type)
     """
 
-def visualize(json_data, output_folder):
+def visualize(importer, json_data, output_folder):
     while True:
         try:
             json_index = input("Enter a number between 0 and {} to visualize (or type 'skip' to proceed with upload): ".format(len(json_data) - 1))
@@ -50,7 +50,7 @@ def visualize(json_data, output_folder):
 
             json_index = int(json_index)
             if 0 <= json_index < len(json_data):
-                visualize_dataset(json_data[json_index], output_folder)
+                importer.visualize(json_data[json_index], output_folder)
             else:
                 print("Invalid number. Please try again.")
 
@@ -87,7 +87,8 @@ def main():
             importer = COCOImporter(args.source_folder, temp_output_folder)
         elif args.format.lower() == 'yolov8':
             importer = YOLOv8Importer(args.source_folder, temp_output_folder)
-        # Add other format conditions here
+        elif args.format.lower() == 'im_classification':
+            importer = ImageClassificationImporter(args.source_folder, temp_output_folder)
         else:
             raise ValueError("Unsupported format")
 
@@ -96,7 +97,7 @@ def main():
         if args.visualize:
             print("Visualizing converted dataset...")
             json_data = load_json(os.path.join(temp_output_folder, 'dataset.json'))
-            visualize(json_data, temp_output_folder)
+            visualize(importer, json_data, temp_output_folder)
         
         if args.no_upload:
             print("Saving converted dataset...")

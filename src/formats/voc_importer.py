@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from src.formats.base_importer import BaseImporter
 from src.utilities.file import find_file
 from src.config.logging import logger
+from src.utilities.visualize import draw_bbox_image
 
 
 class VOCImporter(BaseImporter):
@@ -21,6 +22,19 @@ class VOCImporter(BaseImporter):
         self.files_folder = os.path.join(self.output_folder, "files")
         if not os.path.exists(self.files_folder):
             os.makedirs(self.files_folder)
+
+    def visualize(self, data, output_folder):
+        """
+        Visualizes the dataset.
+
+        Args:
+            data (dict): The dataset.
+            output_folder (str): The path to the output folder.
+        """
+        image_path = data["data"]["image"]
+        annotations = data["annotations"]
+
+        draw_bbox_image(image_path, annotations, output_folder)
 
     def import_dataset(self):
         """

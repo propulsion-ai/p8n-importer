@@ -23,8 +23,8 @@ def get_rectangle_coords(annotation, img_width, img_height):
     return [x_min, y_min, x_max, y_max]
 
 
-# Draw annotations on image
-def draw_annotations(image_path, annotations, output_folder):
+# Draw bounding boxes on image
+def draw_bbox_image(image_path, annotations, output_folder):
     image_path = os.path.join(output_folder, image_path)
     image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
@@ -49,9 +49,27 @@ def draw_annotations(image_path, annotations, output_folder):
 
     image.show()
 
+def draw_class_name(image_path, class_name, output_folder):
+    """
+    Draw the class name on the top left corner of the image.
 
-def visualize_dataset(data, output_folder):
-    image_path = data["data"]["image"]
-    annotations = data["annotations"]
+    Args:
+        image_path (str): Path to the image file.
+        class_name (str): The class name to be drawn.
+        output_folder (str): The path to the output folder.
+    """
+    image_path = os.path.join(output_folder, image_path)
+    image = Image.open(image_path)
+    draw = ImageDraw.Draw(image)
 
-    draw_annotations(image_path, annotations, output_folder)
+    try:
+        font = ImageFont.truetype("arial.ttf", 20)
+    except IOError:
+        font = ImageFont.load_default()
+
+    text_color = get_random_color()
+
+    # Drawing text on the top left corner
+    draw.text((10, 10), class_name, fill=text_color, font=font)
+
+    image.show()

@@ -19,3 +19,12 @@ class BaseImporter:
         This method should be overridden in a subclass.
         """
         raise NotImplementedError("This method should be overridden in a subclass")
+    
+    def visualize(self, data, output_folder):
+        """
+        Visualizes the dataset.
+
+        This method should be overridden in a subclass.
+        """
+        raise NotImplementedError("This method should be overridden in a subclass")
+        
