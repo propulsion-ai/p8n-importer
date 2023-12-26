@@ -7,12 +7,15 @@ import tempfile
 from getpass import getpass
 
 from src.config.logging import setup_logger
+from src.formats.base_importer import BaseImporter as Base
 from src.formats.coco_json_importer import COCOImporter
 from src.formats.voc_importer import VOCImporter
 from src.formats.yolov8_importer import YOLOv8Importer
 from src.formats.classification_importer import ImageClassificationImporter
 from src.uploader import upload_dataset
 from src.utilities.file import load_json
+from src.api.datasets import create_dataset
+from src.utilities.keys import get_project_id
 
 
 def get_api_key():
@@ -24,22 +27,47 @@ def get_api_key():
             raise ValueError("API key cannot be blank.")
     return api_key
 
-def get_dataset_id():
-    dataset_id = input("Please enter the Dataset ID: ")
+def get_dataset_id(importer:Base, api_key:str):
+    dataset_id = input("Please enter the Dataset ID (skip to create a new dataset): ")
+
     if not dataset_id:
-        raise ValueError("Dataset ID cannot be blank.")
-    return dataset_id
-    
-    # Uncomment below to enable new dataset creation
-    """
-    if not dataset_id:
+        project_id = get_project_id(api_key)
+        print(f"Project ID: {project_id}")
         name = input("Enter the name for the new dataset: ")
+
+        if not name:
+            raise ValueError("Dataset name cannot be blank.")
+
         description = input("Enter a description for the new dataset: ")
-        input_type = input("Enter the input type for the new dataset: ")
-        action_type = input("Enter the action type for the new dataset: ")
+
+        if not description:
+            raise ValueError("Dataset description cannot be blank.")
+
+        default_input_type, default_action_type = importer.get_input_action_types()
+
+        input_type = input(f"Enter the input type for the new dataset (suggested: {default_input_type}): ")
+
+        if not input_type.strip():
+            input_type = default_input_type
+
+        action_type = input(f"Enter the action type for the new dataset (suggested: {default_action_type}): ")
+
+        if not action_type.strip():
+            action_type = default_action_type
+
         # API call to create new dataset and retrieve dataset_id
-        # dataset_id = create_new_dataset(api_key, name, description, input_type, action_type)
-    """
+        dataset_id = create_dataset(name, description, project_id, input_type, action_type, api_key).json()["dataset"]["id"]
+
+        print(f"Created new dataset with ID: {dataset_id}.")
+
+        return dataset_id
+    else:
+        # check valid dataset_id
+        try:
+            int(dataset_id)
+            return dataset_id
+        except ValueError: 
+            raise ValueError("Dataset ID should be an integer.")
 
 def visualize(importer, json_data, output_folder):
     while True:
@@ -77,9 +105,6 @@ def main():
     else:
         setup_logger(level=logging.WARNING)
 
-    api_key = get_api_key()
-    dataset_id = get_dataset_id()
-
     with tempfile.TemporaryDirectory() as temp_output_folder:
         if args.format.lower() == 'voc':
             importer = VOCImporter(args.source_folder, temp_output_folder)
@@ -91,6 +116,10 @@ def main():
             importer = ImageClassificationImporter(args.source_folder, temp_output_folder)
         else:
             raise ValueError("Unsupported format")
+
+        # Get API key and dataset ID
+        api_key = get_api_key()
+        dataset_id = get_dataset_id(importer, api_key)
 
         importer.import_dataset()
 

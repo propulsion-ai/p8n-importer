@@ -17,7 +17,7 @@ def generate_labels_mapping(labels, has_colors=True):
     for label in labels:
         label_mapping = {
             "id": str(uuid.uuid4()),
-            "name": label,
+            "label": label,
         }
         if has_colors:
             label_mapping["color"] = "#%06x" % random.randint(0, 0xFFFFFF)

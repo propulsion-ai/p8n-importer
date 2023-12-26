@@ -99,3 +99,12 @@ class ImageClassificationImporter(BaseImporter):
         labels_mapping_file = os.path.join(self.output_folder, "metadata.json")
         with open(labels_mapping_file, "w") as f:
             json.dump(labels_mapping, f, indent=4)
+
+    def get_input_action_types(self):
+        """
+        Get the input and action types of the dataset.
+
+        Returns:
+            tuple: The input and action types.
+        """
+        return "IMAGE", "IMAGE_CLASSIFICATION"

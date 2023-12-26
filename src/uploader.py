@@ -2,7 +2,7 @@
 import json
 import os
 
-from src.api.dataset_api import import_dataset, update_dataset, upload_file
+from src.api.datasets import import_dataset, update_dataset, upload_file
 from tqdm import tqdm
 
 
@@ -92,7 +92,7 @@ def upload_dataset(temp_output_folder, dataset_id, api_key):
         with open(metadata_file_path, "r") as metadata_file:
             metadata = json.load(metadata_file)
 
-    payload = {"metadata", metadata}
+    payload = {"metadata": metadata}
 
     update_response = update_dataset(payload, api_key, dataset_id)
 

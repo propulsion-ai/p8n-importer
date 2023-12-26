@@ -1,6 +1,6 @@
 import requests
 from src.config.logging import logger
-from src.config.urls import DATASET_IMPORT_URL, DATASET_UPLOAD_URL, DATASET_UPDATE_URL
+from src.config.urls import DATASET_IMPORT_URL, DATASET_UPLOAD_URL, DATASET_UPDATE_URL, DATASET_CREATE_URL
 
 
 def upload_file(file_path, api_key, dataset_id):
@@ -73,4 +73,36 @@ def update_dataset(dataset, api_key, dataset_id):
     response = requests.patch(url, headers=headers, json=dataset)
     if response.status_code != 200:
         raise Exception(f"Failed to update dataset {dataset_id}: {response.text}")
+    return response
+
+def create_dataset(name, description, project_id, input_type, action_type, api_key):
+    """
+    Creates a dataset by sending a POST request to the specified API endpoint.
+
+    Args:
+        name (str): The name of the dataset to be created.
+        description (str): The description of the dataset to be created.
+        project_id (str): The ID of the project to which the dataset belongs.
+        input_type (str): The input type of the dataset to be created.
+        action_type (str): The action type of the dataset to be created.
+        api_key (str): The API key for authentication.
+
+    Returns:
+        requests.Response: The response object containing the result of the create request.
+
+    Raises:
+        Exception: If the create request fails with a non-200 status code.
+    """
+    url = DATASET_CREATE_URL
+    dataset = {
+        "name": name,
+        "description": description,
+        "project_id": project_id,
+        "input_type": input_type,
+        "action_type": action_type
+    }
+    headers = {"Authorization": f"Bearer {api_key}"}
+    response = requests.post(url, headers=headers, json=dataset)
+    if response.status_code != 200:
+        raise Exception(f"Failed to create dataset: {response.text}")
     return response

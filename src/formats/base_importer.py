@@ -35,4 +35,12 @@ class BaseImporter:
         This method should be overridden in a subclass.
         """
         raise NotImplementedError("This method should be overridden in a subclass")
+    
+    def get_input_action_types(self):
+        """
+        Gets the input and action types of the dataset.
+
+        This method should be overridden in a subclass.
+        """
+        raise NotImplementedError("This method should be overridden in a subclass")
         
