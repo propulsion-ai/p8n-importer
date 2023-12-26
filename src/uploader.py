@@ -84,7 +84,7 @@ def upload_dataset(temp_output_folder, dataset_id, api_key):
     if response.status_code != 200:
         raise Exception(f"Failed to post JSON data: {response.text}")
     else:
-        print(f"Dataset imported successfully: {response.status_code}, {response.text}")
+        print(f"Dataset imported successfully.")
 
     # check if metadata file exists and call update
     metadata_file_path = os.path.join(temp_output_folder, "metadata.json")
@@ -99,4 +99,4 @@ def upload_dataset(temp_output_folder, dataset_id, api_key):
     if update_response.status_code != 200:
         raise Exception(f"Failed to update metadata: {response.text}")
     else:
-        print(f"Dataset metadata updated successfully: {update_response.status_code}, {update_response.text}")
+        print(f"Dataset metadata updated successfully.")

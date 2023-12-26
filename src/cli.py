@@ -32,7 +32,7 @@ def get_dataset_id(importer:Base, api_key:str):
 
     if not dataset_id:
         project_id = get_project_id(api_key)
-        print(f"Project ID: {project_id}")
+        
         name = input("Enter the name for the new dataset: ")
 
         if not name:
