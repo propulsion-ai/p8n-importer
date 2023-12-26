@@ -1,11 +1,13 @@
 import json
 import os
 import shutil
-import yaml
 
-from src.formats.base_importer import BaseImporter
+import yaml
 from src.config.logging import logger
+from src.formats.base_importer import BaseImporter
+from src.utilities.mapping import generate_labels_mapping
 from src.utilities.visualize import draw_bbox_image
+
 
 class YOLOv8Importer(BaseImporter):
     def __init__(self, annotations_path, output_folder):
@@ -40,22 +42,22 @@ class YOLOv8Importer(BaseImporter):
         """
         label_studio_json = []
 
-        with open(os.path.join(self.source_folder, "data.yaml"), 'r') as yaml_file:
+        with open(os.path.join(self.source_folder, "data.yaml"), "r") as yaml_file:
             yaml_data = yaml.safe_load(yaml_file)
 
-        label_names = yaml_data['names']
+        label_names = yaml_data["names"]
         num_classes = len(label_names)
 
-        if 'path' in yaml_data and yaml_data['path']:
-            root_folder = yaml_data['path']
+        if "path" in yaml_data and yaml_data["path"]:
+            root_folder = yaml_data["path"]
         else:
             root_folder = self.source_folder
 
         folders = []
 
-        train_folder = yaml_data['train']
+        train_folder = yaml_data["train"]
 
-        if train_folder.startswith('../'):
+        if train_folder.startswith("../"):
             train_folder = train_folder[3:]
 
         if train_folder and os.path.exists(os.path.join(root_folder, train_folder)):
@@ -64,19 +66,19 @@ class YOLOv8Importer(BaseImporter):
             logger.error(f"Train folder not found: {train_folder}")
             raise FileNotFoundError
 
-        val_folder = yaml_data['val']
+        val_folder = yaml_data["val"]
 
-        if val_folder.startswith('../'):
+        if val_folder.startswith("../"):
             val_folder = val_folder[3:]
 
         if val_folder and os.path.exists(os.path.join(root_folder, val_folder)):
             folders.append(os.path.split(os.path.join(root_folder, val_folder))[0])
         else:
             logger.error(f"Validation folder not found: {val_folder}")
-        
-        test_folder = yaml_data['test']
 
-        if test_folder.startswith('../'):
+        test_folder = yaml_data["test"]
+
+        if test_folder.startswith("../"):
             test_folder = test_folder[3:]
 
         if test_folder and os.path.exists(os.path.join(root_folder, test_folder)):
@@ -109,12 +111,16 @@ class YOLOv8Importer(BaseImporter):
 
                     annotations = []
 
-                    with open(label_path, 'r') as label_file:
+                    with open(label_path, "r") as label_file:
                         lines = label_file.readlines()
                         for line in lines:
                             line = line.strip().split()
-                            if len(line) == 5:  # Expected YOLO label format (class_id, x_center, y_center, width, height)
-                                class_id, x_center, y_center, width, height = map(float, line)
+                            if (
+                                len(line) == 5
+                            ):  # Expected YOLO label format (class_id, x_center, y_center, width, height)
+                                class_id, x_center, y_center, width, height = map(
+                                    float, line
+                                )
                                 label = label_names[int(class_id)]
 
                                 x_center *= 100  # Convert to percentage
@@ -126,32 +132,57 @@ class YOLOv8Importer(BaseImporter):
                                 x = x_center - width / 2
                                 y = y_center - height / 2
 
-
                                 annotation_item = {
-                                    'type': 'rectanglelabels',
-                                    'value': {
-                                        'x': x,
-                                        'y': y,
-                                        'width': width,
-                                        'height': height,
-                                        'rectanglelabels': [label]
-                                    }
+                                    "type": "rectanglelabels",
+                                    "value": {
+                                        "x": x,
+                                        "y": y,
+                                        "width": width,
+                                        "height": height,
+                                        "rectanglelabels": [label],
+                                    },
                                 }
                                 annotations.append(annotation_item)
                             else:
-                                logger.warning(f"Invalid label format: {line}, skipping...")
+                                logger.warning(
+                                    f"Invalid label format: {line}, skipping..."
+                                )
                                 continue
                     label_studio_item = {
-                        'data': {
-                            'image': os.path.relpath(target_image_path, self.output_folder)
+                        "data": {
+                            "image": os.path.relpath(
+                                target_image_path, self.output_folder
+                            )
                         },
-                        'annotations': annotations
+                        "annotations": annotations,
                     }
 
                     label_studio_json.append(label_studio_item)
                 else:
-                    logger.warning(f"Image file or label file not found: {image_path} / {label_path}, skipping...")
+                    logger.warning(
+                        f"Image file or label file not found: {image_path} / {label_path}, skipping..."
+                    )
 
-        output_file = os.path.join(self.output_folder, 'dataset.json')
-        with open(output_file, 'w') as f:
+        output_file = os.path.join(self.output_folder, "dataset.json")
+        with open(output_file, "w") as f:
             json.dump(label_studio_json, f, indent=4)
+
+        self.generate_metadata(label_studio_json)
+
+    def generate_metadata(self, data):
+        """
+        Generate the metadata of the dataset.
+
+        Args:
+            data (list): The dataset as an array of objects.
+        """
+        labels = set()
+        for item in data:
+            for annotation in item["annotations"]:
+                for label in annotation["value"]["rectanglelabels"]:
+                    labels.add(label)
+
+        labels_mapping = generate_labels_mapping(labels)
+        labels_mapping_file = os.path.join(self.output_folder, "metadata.json")
+        with open(labels_mapping_file, "w") as f:
+            json.dump(labels_mapping, f, indent=4)

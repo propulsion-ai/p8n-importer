@@ -5,6 +5,8 @@ import shutil
 from src.formats.base_importer import BaseImporter
 from src.config.logging import logger
 from src.utilities.visualize import draw_bbox_image
+from src.utilities.mapping import generate_labels_mapping
+
 
 class COCOImporter(BaseImporter):
     def __init__(self, root_folder, output_folder):
@@ -19,7 +21,7 @@ class COCOImporter(BaseImporter):
         self.files_folder = os.path.join(self.output_folder, "files")
         if not os.path.exists(self.files_folder):
             os.makedirs(self.files_folder)
-    
+
     def visualize(self, data, output_folder):
         """
         Visualizes the dataset.
@@ -43,11 +45,19 @@ class COCOImporter(BaseImporter):
             subset_folder = os.path.join(self.source_folder, subset)
 
             try:
-                with open(os.path.join(subset_folder, '_annotations.coco.json'), 'r') as coco_file:
+                with open(
+                    os.path.join(subset_folder, "_annotations.coco.json"), "r"
+                ) as coco_file:
                     coco_data = json.load(coco_file)
             except FileNotFoundError:
-                logger.warning(f"Annotation file not found in: {subset_folder}.")
+                logger.info(
+                    f'Annotation file not found in: "{subset_folder}" . Skipping...'
+                )
                 continue
+
+            logger.info(
+                f"Processing dataset from: \"{subset_folder}\" . Number of images: {len(coco_data['images'])}"
+            )
 
             for image_info in coco_data["images"]:
                 image_id = image_info["id"]
@@ -58,7 +68,9 @@ class COCOImporter(BaseImporter):
 
                 try:
                     # Copy image file to files folder
-                    shutil.copy2(os.path.join(subset_folder, file_name), target_image_path)
+                    shutil.copy2(
+                        os.path.join(subset_folder, file_name), target_image_path
+                    )
                 except FileNotFoundError:
                     logger.warning(f"Image file not found: {file_name}.")
 
@@ -70,36 +82,39 @@ class COCOImporter(BaseImporter):
                         bbox = annotation["bbox"]
                         label = self.get_category_name(coco_data, category_id)
 
+                        if category_id == 2:
+                            print("Founda category_id 2", image_id, label)
+
                         annotation_item = {
-                            'type': 'rectanglelabels',
-                            'original_width': width,
-                            'original_height': height,
-                            'image_rotation': 0,
-                            'value': {
-                                'x': bbox[0] / width * 100,
-                                'y': bbox[1] / height * 100,
-                                'width': bbox[2] / width * 100,
-                                'height': bbox[3] / height * 100,
-                                'rotation': 0,
-                                'rectanglelabels': [label]
-                            }
+                            "type": "rectanglelabels",
+                            "original_width": width,
+                            "original_height": height,
+                            "image_rotation": 0,
+                            "value": {
+                                "x": bbox[0] / width * 100,
+                                "y": bbox[1] / height * 100,
+                                "width": bbox[2] / width * 100,
+                                "height": bbox[3] / height * 100,
+                                "rotation": 0,
+                                "rectanglelabels": [label],
+                            },
                         }
                         annotations.append(annotation_item)
 
                 label_studio_item = {
-                    'data': {
-                        'image': os.path.relpath(target_image_path, self.output_folder)
+                    "data": {
+                        "image": os.path.relpath(target_image_path, self.output_folder)
                     },
-                    'annotations': annotations
+                    "annotations": annotations,
                 }
 
                 label_studio_json.append(label_studio_item)
-                
 
-
-        output_file = os.path.join(self.output_folder, 'dataset.json')
-        with open(output_file, 'w') as f:
+        output_file = os.path.join(self.output_folder, "dataset.json")
+        with open(output_file, "w") as f:
             json.dump(label_studio_json, f, indent=4)
+
+        self.generate_metadata(label_studio_json)
 
     def get_category_name(self, coco_data, category_id):
         """
@@ -115,4 +130,22 @@ class COCOImporter(BaseImporter):
         for category in coco_data["categories"]:
             if category["id"] == category_id:
                 return category["name"]
-        return "unknown"  # You can customize this based on your dataset.
+        return "unknown"
+
+    def generate_metadata(self, data):
+        """
+        Generate the metadata of the dataset.
+
+        Args:
+            data (list): The dataset as an array of objects.
+        """
+        labels = set()
+        for item in data:
+            for annotation in item["annotations"]:
+                for label in annotation["value"]["rectanglelabels"]:
+                    labels.add(label)
+
+        labels_mapping = generate_labels_mapping(labels)
+        labels_mapping_file = os.path.join(self.output_folder, "metadata.json")
+        with open(labels_mapping_file, "w") as f:
+            json.dump(labels_mapping, f, indent=4)

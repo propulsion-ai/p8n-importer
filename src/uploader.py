@@ -1,9 +1,9 @@
 # src/uploader.py
 import json
 import os
-from tqdm import tqdm
 
-from src.api.dataset_api import upload_file, import_dataset
+from src.api.dataset_api import import_dataset, update_dataset, upload_file
+from tqdm import tqdm
 
 
 def update_json_data_with_urls(json_data, file_urls):
@@ -43,6 +43,9 @@ def upload_dataset(temp_output_folder, dataset_id, api_key):
     Returns:
         None
     """
+
+    # TODO: check dataset compatibility with input type and action type before uploading
+
     json_file_path = os.path.join(temp_output_folder, "dataset.json")
     with open(json_file_path, "r") as file:
         json_data = json.load(file)
@@ -80,4 +83,20 @@ def upload_dataset(temp_output_folder, dataset_id, api_key):
 
     if response.status_code != 200:
         raise Exception(f"Failed to post JSON data: {response.text}")
-    print(f"Dataset imported successfully: {response.status_code}, {response.text}")
+    else:
+        print(f"Dataset imported successfully: {response.status_code}, {response.text}")
+
+    # check if metadata file exists and call update
+    metadata_file_path = os.path.join(temp_output_folder, "metadata.json")
+    if os.path.exists(metadata_file_path):
+        with open(metadata_file_path, "r") as metadata_file:
+            metadata = json.load(metadata_file)
+
+    payload = {"metadata", metadata}
+
+    update_response = update_dataset(payload, api_key, dataset_id)
+
+    if update_response.status_code != 200:
+        raise Exception(f"Failed to update metadata: {response.text}")
+    else:
+        print(f"Dataset metadata updated successfully: {update_response.status_code}, {update_response.text}")

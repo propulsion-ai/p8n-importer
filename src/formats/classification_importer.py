@@ -2,9 +2,11 @@ import json
 import os
 import shutil
 
-from src.formats.base_importer import BaseImporter
 from src.config.logging import logger
+from src.formats.base_importer import BaseImporter
+from src.utilities.mapping import generate_labels_mapping
 from src.utilities.visualize import draw_class_name
+
 
 class ImageClassificationImporter(BaseImporter):
     def __init__(self, root_folder, output_folder):
@@ -20,7 +22,7 @@ class ImageClassificationImporter(BaseImporter):
         if not os.path.exists(self.files_folder):
             os.makedirs(self.files_folder)
 
-    def visualize(self, data, output_folder):
+    def visualize(self, data):
         """
         Visualizes the dataset.
 
@@ -31,7 +33,7 @@ class ImageClassificationImporter(BaseImporter):
         image_path = data["data"]["image"]
         class_name = data["annotations"][0]["value"]["choices"][0]
 
-        draw_class_name(image_path, class_name, output_folder)
+        draw_class_name(image_path, class_name, self.output_folder)
 
     def import_dataset(self):
         """
@@ -50,26 +52,50 @@ class ImageClassificationImporter(BaseImporter):
                         # Copy image file to files folder
                         shutil.copy2(image_path, target_image_path)
                     except FileNotFoundError:
-                        logger.warning(f"Image file not found in: {image_path}. Skipping...")
+                        logger.warning(
+                            f"Image file not found in: {image_path}. Skipping..."
+                        )
                         continue
 
                     label_studio_item = {
-                        'data': {
-                            'image': os.path.relpath(target_image_path, self.output_folder)
+                        "data": {
+                            "image": os.path.relpath(
+                                target_image_path, self.output_folder
+                            )
                         },
-                        'annotations': [{
-                            'value': {
-                                'choices': [class_name]
-                            },
-                            'from_name': 'choice',
-                            'to_name': 'image',
-                            'type': 'choices',
-                            'origin': 'manual'
-                        }]
+                        "annotations": [
+                            {
+                                "value": {"choices": [class_name]},
+                                "from_name": "choice",
+                                "to_name": "image",
+                                "type": "choices",
+                                "origin": "manual",
+                            }
+                        ],
                     }
 
                     label_studio_json.append(label_studio_item)
 
-        output_file = os.path.join(self.output_folder, 'dataset.json')
-        with open(output_file, 'w') as f:
+        output_file = os.path.join(self.output_folder, "dataset.json")
+        with open(output_file, "w") as f:
             json.dump(label_studio_json, f, indent=4)
+
+        self.generate_metadata(label_studio_json)
+
+    def generate_metadata(self, data):
+        """
+        Generate the metadata of the dataset.
+
+        Args:
+            data (list): The dataset.
+        """
+        labels = set()
+        for item in data:
+            annotation = item["annotations"][0]
+            label = annotation["value"]["choices"][0]
+            labels.add(label)
+
+        labels_mapping = generate_labels_mapping(labels, has_colors=False)
+        labels_mapping_file = os.path.join(self.output_folder, "metadata.json")
+        with open(labels_mapping_file, "w") as f:
+            json.dump(labels_mapping, f, indent=4)

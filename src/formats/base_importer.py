@@ -27,4 +27,12 @@ class BaseImporter:
         This method should be overridden in a subclass.
         """
         raise NotImplementedError("This method should be overridden in a subclass")
+    
+    def generate_metadata(self, data):
+        """
+        Generates the metadata of the dataset.
+
+        This method should be overridden in a subclass.
+        """
+        raise NotImplementedError("This method should be overridden in a subclass")
         

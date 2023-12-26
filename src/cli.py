@@ -100,14 +100,14 @@ def main():
             visualize(importer, json_data, temp_output_folder)
         
         if args.no_upload:
-            print("Saving converted dataset...")
-            output_folder = "conversion_output"  # Specify the name of the output folder
+            output_folder = "p8n_conversion_output"  # Specify the name of the output folder
             # Create the output folder if it doesn't exist
             if not os.path.exists(output_folder):
                 os.makedirs(output_folder)
-
             # Copy the contents of temp_output_folder to the output folder
             shutil.copytree(temp_output_folder, os.path.join(output_folder, os.path.basename(temp_output_folder)))
+
+            print(f"Saved converted dataset to {output_folder}/{os.path.basename(temp_output_folder)}.")
         else:
             upload_dataset(temp_output_folder, dataset_id, api_key)
 
