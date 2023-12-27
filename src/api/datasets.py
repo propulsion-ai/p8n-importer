@@ -75,7 +75,7 @@ def update_dataset(dataset, api_key, dataset_id):
         raise Exception(f"Failed to update dataset {dataset_id}: {response.text}")
     return response
 
-def create_dataset(name, description, project_id, input_type, action_type, api_key):
+def create_dataset(name, description, project_id, input_type, action_type, api_key, metadata=None):
     """
     Creates a dataset by sending a POST request to the specified API endpoint.
 
@@ -99,7 +99,8 @@ def create_dataset(name, description, project_id, input_type, action_type, api_k
         "description": description,
         "project_id": project_id,
         "input_type": input_type,
-        "action_type": action_type
+        "action_type": action_type,
+        "metadata": metadata
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(url, headers=headers, json=dataset)
