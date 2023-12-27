@@ -52,12 +52,23 @@ def get_dataset_id(importer: BaseImporter, api_key: str):
             input_type = default_input_type
 
         if default_action_type and default_action_type != "None":
-            action_type = input(
-                f"Enter the action type for the new dataset (suggested: {default_action_type}): "
-            )
+            if len(default_action_type.split(",")) > 1:
+                options = default_action_type.split(",")
+                print("Please select one of the following action types:")
+                for i, option in enumerate(options):
+                    print(f"{i}: {option}")
+                action_type_index = input("Enter the index of the action type: ")   
+                if not action_type_index.isdigit():
+                    raise ValueError("Invalid index for the action type.")
 
-            if not action_type.strip():
-                action_type = default_action_type
+                action_type = options[int(action_type_index)]
+            else:
+                action_type = input(
+                    f"Enter the action type for the new dataset (suggested: {default_action_type}): "
+                )
+
+                if not action_type.strip():
+                    action_type = default_action_type
         else:
             action_type = input(f"Enter the action type for the new dataset: ")
             if not action_type:

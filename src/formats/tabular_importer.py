@@ -16,6 +16,9 @@ class TabularImporter(BaseImporter):
             output_folder (str): The output folder path.
         """
         super().__init__(root_folder, output_folder)
+        self.files_folder = os.path.join(self.output_folder, "files")
+        if not os.path.exists(self.files_folder):
+            os.makedirs(self.files_folder)
 
     def import_dataset(self):
         """
@@ -61,7 +64,7 @@ class TabularImporter(BaseImporter):
             dataframes.append(df)
 
         combined_df = pd.concat(dataframes, ignore_index=True)
-        combined_df_path = os.path.join(self.output_folder, "dataset.parquet")
+        combined_df_path = os.path.join(self.files_folder, "dataset.parquet")
         combined_df.to_parquet(combined_df_path)
 
         # generate label studio json
@@ -116,4 +119,4 @@ class TabularImporter(BaseImporter):
         Returns:
             tuple: The input and action types.
         """
-        return "TABULAR"
+        return "TABULAR", "TABULAR_CLASSIFICATION,TABULAR_REGRESSION"
