@@ -61,17 +61,17 @@ class ImageClassificationImporter(BaseImporter):
                         "data": {
                             "image": os.path.relpath(
                                 target_image_path, self.output_folder
-                            )
+                            ),
+                            "annotations": [
+                                {
+                                    "value": {"choices": [class_name]},
+                                    "from_name": "choice",
+                                    "to_name": "image",
+                                    "type": "choices",
+                                    "origin": "manual",
+                                }
+                            ],
                         },
-                        "annotations": [
-                            {
-                                "value": {"choices": [class_name]},
-                                "from_name": "choice",
-                                "to_name": "image",
-                                "type": "choices",
-                                "origin": "manual",
-                            }
-                        ],
                     }
 
                     label_studio_json.append(label_studio_item)
@@ -91,7 +91,7 @@ class ImageClassificationImporter(BaseImporter):
         """
         labels = set()
         for item in data:
-            annotation = item["annotations"][0]
+            annotation = item["data"]["annotations"][0]
             label = annotation["value"]["choices"][0]
             labels.add(label)
 

@@ -70,8 +70,7 @@ class TabularImporter(BaseImporter):
         # generate label studio json
         label_studio_json = [
             {
-                "data": {"file": os.path.relpath(combined_df_path, self.output_folder)},
-                "annotations": [],
+                "data": {"file": os.path.relpath(combined_df_path, self.output_folder),"annotations": []},
             }
         ]
 

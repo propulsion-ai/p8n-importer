@@ -152,9 +152,9 @@ class YOLOv8Importer(BaseImporter):
                         "data": {
                             "image": os.path.relpath(
                                 target_image_path, self.output_folder
-                            )
+                            ),
+                            "annotations": annotations,
                         },
-                        "annotations": annotations,
                     }
 
                     label_studio_json.append(label_studio_item)
@@ -178,7 +178,7 @@ class YOLOv8Importer(BaseImporter):
         """
         labels = set()
         for item in data:
-            for annotation in item["annotations"]:
+            for annotation in item["data"]["annotations"]:
                 for label in annotation["value"]["rectanglelabels"]:
                     labels.add(label)
 

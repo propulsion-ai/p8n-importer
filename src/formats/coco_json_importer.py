@@ -82,9 +82,6 @@ class COCOImporter(BaseImporter):
                         bbox = annotation["bbox"]
                         label = self.get_category_name(coco_data, category_id)
 
-                        if category_id == 2:
-                            print("Founda category_id 2", image_id, label)
-
                         annotation_item = {
                             "type": "rectanglelabels",
                             "original_width": width,
@@ -103,9 +100,9 @@ class COCOImporter(BaseImporter):
 
                 label_studio_item = {
                     "data": {
-                        "image": os.path.relpath(target_image_path, self.output_folder)
+                        "image": os.path.relpath(target_image_path, self.output_folder),
+                        "annotations": annotations,
                     },
-                    "annotations": annotations,
                 }
 
                 label_studio_json.append(label_studio_item)
@@ -141,7 +138,7 @@ class COCOImporter(BaseImporter):
         """
         labels = set()
         for item in data:
-            for annotation in item["annotations"]:
+            for annotation in item["data"]["annotations"]:
                 for label in annotation["value"]["rectanglelabels"]:
                     labels.add(label)
 

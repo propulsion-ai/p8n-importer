@@ -106,9 +106,9 @@ class VOCImporter(BaseImporter):
 
                 label_studio_item = {
                     "data": {
-                        "image": os.path.relpath(target_image_path, self.output_folder)
-                    },
-                    "annotations": annotations,
+                        "image": os.path.relpath(target_image_path, self.output_folder),
+                        "annotations": annotations,
+                    }
                 }
 
                 label_studio_json.append(label_studio_item)
@@ -128,7 +128,7 @@ class VOCImporter(BaseImporter):
         """
         labels = set()
         for item in data:
-            for annotation in item["annotations"]:
+            for annotation in item["data"]["annotations"]:
                 for label in annotation["value"]["rectanglelabels"]:
                     labels.add(label)
 

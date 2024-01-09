@@ -2,7 +2,7 @@
 import json
 import os
 
-from src.api.datasets import import_dataset, update_dataset, upload_file
+from src.api.datasets import import_dataset, update_dataset, upload_file, upload_files_in_batches
 from tqdm import tqdm
 
 
@@ -52,8 +52,8 @@ def upload_dataset(temp_output_folder, dataset_id, api_key):
 
     file_urls = {}
 
-    # Prepare a list of files to upload
-    files_to_upload = []
+    # Prepare a list of file paths to upload
+    files_to_upload_paths = []
     for item in json_data:
         file_key = (
             item["data"].get("image")
@@ -62,18 +62,41 @@ def upload_dataset(temp_output_folder, dataset_id, api_key):
             or item["data"].get("audio")
         )
         if file_key:
-            file_name = os.path.basename(file_key)
-            files_to_upload.append(file_name)
+            file_path = os.path.join(temp_output_folder, "files", os.path.basename(file_key))
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"File {file_path} does not exist")
+            files_to_upload_paths.append(file_path)
 
-    # Iterate over files with a progress bar
-    for file_name in tqdm(files_to_upload, desc="Uploading files"):
-        file_path = os.path.join(temp_output_folder, "files", file_name)
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File {file_path} does not exist")
-        url = upload_file(file_path, api_key, dataset_id)
-        file_urls[file_name] = url
+    # Upload files in batches
+    uploaded_urls_list = upload_files_in_batches(files_to_upload_paths, api_key, dataset_id)
+
+    # Map file names to their uploaded URLs
+    file_urls = {os.path.basename(path): url for path, url in zip(files_to_upload_paths, uploaded_urls_list)}
 
     update_json_data_with_urls(json_data, file_urls)
+
+    # # Prepare a list of files to upload
+    # files_to_upload = []
+    # for item in json_data:
+    #     file_key = (
+    #         item["data"].get("image")
+    #         or item["data"].get("video")
+    #         or item["data"].get("file")
+    #         or item["data"].get("audio")
+    #     )
+    #     if file_key:
+    #         file_name = os.path.basename(file_key)
+    #         files_to_upload.append(file_name)
+
+    # # Iterate over files with a progress bar
+    # for file_name in tqdm(files_to_upload, desc="Uploading files"):
+    #     file_path = os.path.join(temp_output_folder, "files", file_name)
+    #     if not os.path.exists(file_path):
+    #         raise FileNotFoundError(f"File {file_path} does not exist")
+    #     url = upload_file(file_path, api_key, dataset_id)
+    #     file_urls[file_name] = url
+
+    # update_json_data_with_urls(json_data, file_urls)
 
     json_data_path = os.path.join(temp_output_folder, "dataset_processed.json")
     with open(json_data_path, "w") as f:

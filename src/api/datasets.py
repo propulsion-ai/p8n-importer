@@ -1,8 +1,13 @@
 import requests
+from tqdm import tqdm
+
 from src.config.logging import logger
 from src.config.urls import DATASET_IMPORT_URL, DATASET_UPLOAD_URL, DATASET_UPDATE_URL, DATASET_CREATE_URL
+from src.utilities.api import retry
 
+MAX_FILES = 10  # Maximum number of files per batch
 
+@retry
 def upload_file(file_path, api_key, dataset_id):
     """
     Uploads a file to the dataset.
@@ -28,7 +33,49 @@ def upload_file(file_path, api_key, dataset_id):
         raise Exception(f"Failed to upload file {file_path}: {response.text}")
     return response.json()["urls"][0]
 
+@retry
+def upload_files_in_batches(file_paths, api_key, dataset_id):
+    """
+    Uploads multiple files to the dataset in batches, with a progress bar showing total files.
 
+    Args:
+        file_paths (list of str): The paths of the files to be uploaded.
+        api_key (str): The API key for authentication.
+        dataset_id (str): The ID of the dataset.
+
+    Returns:
+        list of str: The URLs of the uploaded files.
+
+    Raises:
+        Exception: If the file upload fails.
+    """
+    uploaded_urls = []
+
+    with tqdm(total=len(file_paths), desc="Uploading files") as pbar:
+        for i in range(0, len(file_paths), MAX_FILES):
+            batch = file_paths[i:i + MAX_FILES]
+            logger.info(f"Uploading file batch: {batch}...")
+            url = DATASET_UPLOAD_URL.format(dataset_id=dataset_id)
+            headers = {"Authorization": f"Bearer {api_key}"}
+
+            with requests.Session() as session:
+                files = [("files", (open(file_path, "rb"))) for file_path in batch]
+                response = session.post(url, headers=headers, files=files)
+
+                # Closing opened files
+                for _, file in files:
+                    file.close()
+
+                if response.status_code != 200:
+                    raise Exception(f"Failed to upload files: {response.text}")
+
+                uploaded_urls.extend(response.json()["urls"])
+
+            pbar.update(len(batch))  # Update the progress bar based on the number of files in the batch
+
+    return uploaded_urls
+
+@retry
 def import_dataset(json_data_path, api_key, dataset_id):
     """
     Imports a dataset by sending a POST request to the specified API endpoint.
@@ -52,7 +99,7 @@ def import_dataset(json_data_path, api_key, dataset_id):
         raise Exception(f"Failed to upload file {json_data_path}: {response.text}")
     return response
 
-
+@retry
 def update_dataset(dataset, api_key, dataset_id):
     """
     Updates a dataset by sending a PATCH request to the specified API endpoint.
@@ -75,6 +122,7 @@ def update_dataset(dataset, api_key, dataset_id):
         raise Exception(f"Failed to update dataset {dataset_id}: {response.text}")
     return response
 
+@retry
 def create_dataset(name, description, project_id, input_type, action_type, api_key, metadata=None):
     """
     Creates a dataset by sending a POST request to the specified API endpoint.
@@ -106,4 +154,6 @@ def create_dataset(name, description, project_id, input_type, action_type, api_k
     response = requests.post(url, headers=headers, json=dataset)
     if response.status_code != 200:
         raise Exception(f"Failed to create dataset: {response.text}")
+    else:
+        logger.info(f"Created new dataset with ID: {response.json()['dataset']['id']}")
     return response
