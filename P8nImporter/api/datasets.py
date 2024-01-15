@@ -1,9 +1,9 @@
 import requests
 from tqdm import tqdm
 
-from src.config.logging import logger
-from src.config.urls import DATASET_IMPORT_URL, DATASET_UPLOAD_URL, DATASET_UPDATE_URL, DATASET_CREATE_URL
-from src.utilities.api import retry
+from ..config.logging import logger
+from ..config.urls import DATASET_IMPORT_URL, DATASET_UPLOAD_URL, DATASET_UPDATE_URL, DATASET_CREATE_URL
+from ..utilities.api import retry
 
 MAX_FILES = 10  # Maximum number of files per batch
 

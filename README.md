@@ -14,14 +14,18 @@ Explore more about PropulsionAI at [PropulsionHQ](https://propulsionhq.com).
 - **Visualization**: Preview the dataset conversion result before uploading with the `--visualize` option.
 
 ## Installation
-To install `p8n-importer`, you need Python 3.x and pip installed on your system. You can install `p8n-importer` directly from PyPI:
+To install `p
+
+8n-importer`, you need Python 3.x and pip installed on your system. You can install `p8n-importer` directly from PyPI:
 
 ```bash
 pip install p8n-importer
 ```
 
 ## Usage
-`p8n-importer` is designed to be user-friendly and can be executed from the command line. Here’s how you can use it:
+
+### Command-Line Interface
+`p8n-importer` can be executed from the command line. Here’s how you can use it:
 
 ```bash
 p8n-importer [format] [source_folder] [--verbose] [--no-upload] [--visualize]
@@ -33,12 +37,39 @@ p8n-importer [format] [source_folder] [--verbose] [--no-upload] [--visualize]
 - `--no-upload` (optional): Skip uploading the converted dataset to the platform.
 - `--visualize` (optional): Visualize the dataset conversion result before uploading.
 
+### Programmatic Use
+`p8n-importer` also supports being used programmatically as shown in the example below:
+
+```python
+from P8nImporter import P8nImporter
+
+importer = P8nImporter(
+    api_key="YOUR_API_KEY",
+    dataset_id="DATASET_ID",
+)
+
+image = "path/to/image.jpg"
+annotation_path = "path/to/annotation.txt"
+
+with open(annotation_path, "r") as f:
+    annotation = f.read() # should be a string (multiline is supported)
+
+label_names = ["label1", "label2"]
+
+importer.import_task(
+    format="yolov8",
+    image=image,
+    annotation=annotation,
+    label_names=label_names,
+)
+```
+
 ### Supported Formats
 The following table lists the formats currently supported by `p8n-importer`, along with their respective format codes:
 
 | Format Code       | Format               | Input(s) | Action(s)                  | Description                                          |
 |-------------------|----------------------|----------|----------------------------|------------------------------------------------------|
-| voc               | VOC                  | Image    | Object Detection           | Visual Object Classes                                |
+| voc               | VOC                  | Image    | Object Detection           | Visual                         |
 | yolov8            | YOLOv8               | Image    | Object Detection           | You Only Look Once, version 8                        |
 | coco_json         | COCO JSON            | Image    | Object Detection           | Common Objects in Context, JSON format               |
 | im_classification | Image Classification | Image    | Classification             | Generic image classification datasets                |
@@ -46,7 +77,7 @@ The following table lists the formats currently supported by `p8n-importer`, alo
 
 More formats are planned for future releases.
 
-### Visualization Feature
+### Visualization Feature (Only supported on CLI)
 When using the `--visualize` flag, you can preview how the dataset will look after conversion. This feature is particularly useful to verify annotations and dataset integrity before uploading it to the PropulsionAI platform.
 
 ### API Key and Dataset ID

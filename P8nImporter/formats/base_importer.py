@@ -12,6 +12,14 @@ class BaseImporter:
         self.source_folder = source_folder
         self.output_folder = output_folder
 
+    def import_task(self):
+        """
+        Imports the task.
+
+        This method should be overridden in a subclass.
+        """
+        raise NotImplementedError("This method should be overridden in a subclass")
+
     def import_dataset(self):
         """
         Imports the dataset.

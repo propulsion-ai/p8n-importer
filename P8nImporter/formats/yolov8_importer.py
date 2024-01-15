@@ -1,12 +1,16 @@
+import io
 import json
 import os
 import shutil
+import base64
+
+from PIL import Image
 
 import yaml
-from src.config.logging import logger
-from src.formats.base_importer import BaseImporter
-from src.utilities.mapping import generate_labels_mapping
-from src.utilities.visualize import draw_bbox_image
+from ..config.logging import logger
+from ..formats.base_importer import BaseImporter
+from ..utilities.mapping import generate_labels_mapping
+from ..utilities.visualize import draw_bbox_image
 
 
 class YOLOv8Importer(BaseImporter):
@@ -35,6 +39,90 @@ class YOLOv8Importer(BaseImporter):
         annotations = data["annotations"]
 
         draw_bbox_image(image_path, annotations, output_folder)
+    
+    def import_task(self, image, annotation:str, label_names:list):
+        """
+        Import the YOLOv8 task. Save the image in a temporary folder. Make label studio compatible annotation.
+
+        Args:
+            image (Union[bytes, str]): The image in binary, base64, or string path format.
+            annotation (dict): The annotation.
+            label_names (list): The list of label names.
+        """
+        if not image:
+            raise ValueError("Image is required")
+        
+        if not annotation:
+            raise ValueError("Annotation is required")
+        elif not isinstance(annotation, str):
+            raise ValueError("Annotation must be a string")
+        
+        if not label_names:
+            raise ValueError("Label names are required")
+        elif not isinstance(label_names, list):
+            raise ValueError("Label names must be a list")
+
+        if isinstance(image, bytes):
+            image = Image.open(io.BytesIO(image))
+        elif isinstance(image, str):
+            if image.startswith("data:image"):
+                _, encoded = image.split(",", 1)
+                image = Image.open(io.BytesIO(base64.b64decode(encoded)))
+            else:
+                image = Image.open(image)
+
+        image_name = os.path.basename(image.filename)
+        image_path = os.path.join(self.files_folder, image_name)
+        image.save(image_path)
+
+        annotations = []
+
+        lines = annotation.splitlines()
+        for line in lines:
+            line = line.strip().split()
+            
+            if not len(line) == 5:
+                logger.error(f"Invalid label format: {line}. Skipping...")
+                continue
+
+            class_id, x_center, y_center, width, height = map(
+                float, line
+            )
+            label = label_names[int(class_id)]
+
+            x_center *= 100  # Convert to percentage
+            y_center *= 100
+            width *= 100
+            height *= 100
+
+            # Calculate top-left coordinates
+            x = x_center - width / 2
+            y = y_center - height / 2
+
+            annotation_item = {
+                "type": "rectanglelabels",
+                "value": {
+                    "x": x,
+                    "y": y,
+                    "width": width,
+                    "height": height,
+                    "rectanglelabels": [label],
+                },
+            }
+            annotations.append(annotation_item)
+
+        label_studio_json = [{
+            "data": {
+                "image": os.path.relpath(image_path, self.output_folder),
+                "annotations": annotations,
+            },
+        }]
+
+        output_file = os.path.join(self.output_folder, "dataset.json")
+        with open(output_file, "w") as f:
+            json.dump(label_studio_json, f, indent=4)
+
+        self.generate_metadata(label_studio_json)
 
     def import_dataset(self):
         """

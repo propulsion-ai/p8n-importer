@@ -1,4 +1,4 @@
-# src/cli.py
+# .cli.py
 import argparse
 import logging
 import os
@@ -6,14 +6,14 @@ import shutil
 import tempfile
 from getpass import getpass
 
-from src.api.datasets import create_dataset
-from src.config.logging import setup_logger
-from src.formats import (BaseImporter, COCOImporter,
+from .api.datasets import create_dataset
+from .config.logging import setup_logger
+from .formats import (BaseImporter, COCOImporter,
                          ImageClassificationImporter, TabularImporter,
                          VOCImporter, YOLOv8Importer)
-from src.uploader import upload_dataset
-from src.utilities.file import load_json
-from src.utilities.keys import get_project_id
+from .uploader import upload_dataset
+from .utilities.file import load_json
+from .utilities.keys import get_project_id
 
 
 def get_api_key():

@@ -3,11 +3,11 @@ import os
 import shutil
 import xml.etree.ElementTree as ET
 
-from src.config.logging import logger
-from src.formats.base_importer import BaseImporter
-from src.utilities.file import find_file
-from src.utilities.mapping import generate_labels_mapping
-from src.utilities.visualize import draw_bbox_image
+from ..config.logging import logger
+from ..formats.base_importer import BaseImporter
+from ..utilities.file import find_file
+from ..utilities.mapping import generate_labels_mapping
+from ..utilities.visualize import draw_bbox_image
 
 
 class VOCImporter(BaseImporter):

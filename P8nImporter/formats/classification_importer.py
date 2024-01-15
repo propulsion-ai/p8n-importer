@@ -1,11 +1,14 @@
 import json
 import os
 import shutil
+import io
+import base64
+from PIL import Image
 
-from src.config.logging import logger
-from src.formats.base_importer import BaseImporter
-from src.utilities.mapping import generate_labels_mapping
-from src.utilities.visualize import draw_class_name
+from ..config.logging import logger
+from ..formats.base_importer import BaseImporter
+from ..utilities.mapping import generate_labels_mapping
+from ..utilities.visualize import draw_class_name
 
 
 class ImageClassificationImporter(BaseImporter):
@@ -34,6 +37,54 @@ class ImageClassificationImporter(BaseImporter):
         class_name = data["annotations"][0]["value"]["choices"][0]
 
         draw_class_name(image_path, class_name, self.output_folder)
+
+    def import_task(self, image, class_name):
+        """
+        Import a single image classification task.
+
+        Args:
+            image (str or bytes or numpy.ndarray): The image to import as a task.
+            class_name (str): The class name.
+        """
+        if not image:
+            raise ValueError("Image is required")
+        
+        if not class_name:
+            raise ValueError("Class name is required")
+
+        if isinstance(image, bytes):
+            image = Image.open(io.BytesIO(image))
+        elif isinstance(image, str):
+            if image.startswith("data:image"):
+                _, encoded = image.split(",", 1)
+                image = Image.open(io.BytesIO(base64.b64decode(encoded)))
+            else:
+                image = Image.open(image)
+
+        image_name = os.path.basename(image.filename)
+        image_path = os.path.join(self.files_folder, image_name)
+        image.save(image_path)
+
+        label_studio_item = {
+            "data": {
+                "image": os.path.relpath(image_path, self.output_folder),
+                "annotations": [
+                    {
+                        "value": {"choices": [class_name]},
+                        "from_name": "choice",
+                        "to_name": "image",
+                        "type": "choices",
+                        "origin": "manual",
+                    }
+                ],
+            },
+        }
+
+        output_file = os.path.join(self.output_folder, "dataset.json")
+        with open(output_file, "w") as f:
+            json.dump([label_studio_item], f, indent=4)
+
+        self.generate_metadata([label_studio_item])
 
     def import_dataset(self):
         """

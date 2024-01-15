@@ -1,8 +1,8 @@
-# src/uploader.py
+# .uploader.py
 import json
 import os
 
-from src.api.datasets import import_dataset, update_dataset, upload_file, upload_files_in_batches
+from .api.datasets import import_dataset, update_dataset, upload_file, upload_files_in_batches
 from tqdm import tqdm
 
 

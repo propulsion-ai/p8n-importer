@@ -2,8 +2,8 @@ import pandas as pd
 import os
 import json
 
-from src.config.logging import logger
-from src.formats.base_importer import BaseImporter
+from ..config.logging import logger
+from ..formats.base_importer import BaseImporter
 
 
 class TabularImporter(BaseImporter):

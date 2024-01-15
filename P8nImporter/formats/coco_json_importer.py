@@ -2,10 +2,10 @@ import json
 import os
 import shutil
 
-from src.formats.base_importer import BaseImporter
-from src.config.logging import logger
-from src.utilities.visualize import draw_bbox_image
-from src.utilities.mapping import generate_labels_mapping
+from ..formats.base_importer import BaseImporter
+from ..config.logging import logger
+from ..utilities.visualize import draw_bbox_image
+from ..utilities.mapping import generate_labels_mapping
 
 
 class COCOImporter(BaseImporter):

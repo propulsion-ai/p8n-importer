@@ -1,7 +1,7 @@
 import time
 from functools import wraps
 
-from src.config.logging import logger
+from ..config.logging import logger
 
 # Define the maximum number of retries and the delay between retries
 MAX_RETRIES = 3
