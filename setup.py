@@ -11,7 +11,16 @@ setup(
     url='https://www.propulsionhq.com/',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=open('requirements.txt').read().splitlines(),
+    install_requires=[
+        "tqdm==4.65.0",
+        "requests==2.31.0",
+        "Pillow==9.3.0",
+        "tqdm==4.65.0",
+        "pyarrow",
+        "pandas",
+        "pyyaml",
+        "openpyxl"
+    ],
     python_requires='>=3.7',
     entry_points={
         'console_scripts': [
