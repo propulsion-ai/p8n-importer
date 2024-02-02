@@ -10,7 +10,7 @@ from .api.datasets import create_dataset
 from .config.logging import setup_logger
 from .formats import (BaseImporter, COCOImporter,
                          ImageClassificationImporter, TabularImporter,
-                         VOCImporter, YOLOv8Importer)
+                         VOCImporter, YOLOv8Importer, IAMImporter)
 from .uploader import upload_dataset
 from .utilities.file import load_json
 from .utilities.keys import get_project_id
@@ -142,6 +142,8 @@ def main():
             importer = ImageClassificationImporter(args.source_folder, temp_output_folder)
         elif args.format.lower() == "tabular":
             importer = TabularImporter(args.source_folder, temp_output_folder)
+        elif args.format.lower() == "iam":
+            importer = IAMImporter(args.source_folder, temp_output_folder)
         else:
             raise ValueError("Unsupported format")
 

@@ -4,3 +4,4 @@ from .voc_importer import VOCImporter
 from .yolov8_importer import YOLOv8Importer
 from .classification_importer import ImageClassificationImporter
 from .tabular_importer import TabularImporter
+from .iam_importer import IAMImporter
