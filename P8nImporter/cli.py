@@ -8,9 +8,16 @@ from getpass import getpass
 
 from .api.datasets import create_dataset
 from .config.logging import setup_logger
-from .formats import (BaseImporter, COCOImporter,
-                         ImageClassificationImporter, TabularImporter,
-                         VOCImporter, YOLOv8Importer, IAMImporter)
+from .formats import (
+    BaseImporter,
+    COCOImporter,
+    ImageClassificationImporter,
+    TabularImporter,
+    VOCImporter,
+    YOLOv8Importer,
+    IAMImporter,
+    ASRImporter,
+)
 from .uploader import upload_dataset
 from .utilities.file import load_json
 from .utilities.keys import get_project_id
@@ -57,7 +64,7 @@ def get_dataset_id(importer: BaseImporter, api_key: str):
                 print("Please select one of the following action types:")
                 for i, option in enumerate(options):
                     print(f"{i}: {option}")
-                action_type_index = input("Enter the index of the action type: ")   
+                action_type_index = input("Enter the index of the action type: ")
                 if not action_type_index.isdigit():
                     raise ValueError("Invalid index for the action type.")
 
@@ -117,11 +124,21 @@ def main():
     print("This tool will help you import datasets into the PropulsionAI platform.\n")
 
     parser = argparse.ArgumentParser(description="PropulsionAI Dataset Importer")
-    parser.add_argument("format", help="Dataset format (e.g., 'voc', 'yolov8', 'coco_json')")
+    parser.add_argument(
+        "format", help="Dataset format (e.g., 'voc', 'yolov8', 'coco_json')"
+    )
     parser.add_argument("source_folder", help="Path to the source dataset folder")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
-    parser.add_argument("--no-upload", action="store_true", help="Skip uploading the converted dataset to the platform")
-    parser.add_argument("--visualize", action="store_true", help="Visualize the converted dataset before uploading")
+    parser.add_argument(
+        "--no-upload",
+        action="store_true",
+        help="Skip uploading the converted dataset to the platform",
+    )
+    parser.add_argument(
+        "--visualize",
+        action="store_true",
+        help="Visualize the converted dataset before uploading",
+    )
 
     args = parser.parse_args()
 
@@ -139,11 +156,15 @@ def main():
         elif args.format.lower() == "yolov8":
             importer = YOLOv8Importer(args.source_folder, temp_output_folder)
         elif args.format.lower() == "im_classification":
-            importer = ImageClassificationImporter(args.source_folder, temp_output_folder)
+            importer = ImageClassificationImporter(
+                args.source_folder, temp_output_folder
+            )
         elif args.format.lower() == "tabular":
             importer = TabularImporter(args.source_folder, temp_output_folder)
         elif args.format.lower() == "iam":
             importer = IAMImporter(args.source_folder, temp_output_folder)
+        elif args.format.lower() == "asr":
+            importer = ASRImporter(args.source_folder, temp_output_folder)
         else:
             raise ValueError("Unsupported format")
 

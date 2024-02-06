@@ -1,4 +1,13 @@
-from ..formats import COCOImporter, VOCImporter, YOLOv8Importer, ImageClassificationImporter, TabularImporter
+from ..formats import (
+    COCOImporter,
+    VOCImporter,
+    YOLOv8Importer,
+    ImageClassificationImporter,
+    TabularImporter,
+    IAMImporter,
+    ASRImporter,
+)
+
 
 def setup_importer(format, source_folder, output_folder):
     if format == "coco_json":
@@ -11,5 +20,22 @@ def setup_importer(format, source_folder, output_folder):
         return ImageClassificationImporter(source_folder, output_folder)
     elif format == "tabular":
         return TabularImporter(source_folder, output_folder)
+    elif format == "iam":
+        return IAMImporter(source_folder, output_folder)
+    elif format == "asr":
+        return ASRImporter(source_folder, output_folder)
     else:
         raise ValueError("Format not supported")
+
+
+def generate_random_id(self):
+    """
+    Generate a random id.
+
+    Returns:
+        str: The random id.
+    """
+    import random
+    import string
+
+    return "".join(random.choices(string.ascii_uppercase + string.digits, k=10))

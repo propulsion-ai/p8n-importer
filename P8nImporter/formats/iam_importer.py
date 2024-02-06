@@ -9,6 +9,7 @@ import pandas as pd
 from ..config.logging import logger
 from ..formats.base_importer import BaseImporter
 from ..utilities.mapping import generate_labels_mapping
+from ..utilities.importer import generate_random_id
 
 
 class IAMImporter(BaseImporter):
@@ -44,7 +45,9 @@ class IAMImporter(BaseImporter):
             df.rename(columns={0: "file_name", 1: "text"}, inplace=True)
             del df[2]
             # some file names end with jp instead of jpg, let's fix this
-            df['file_name'] = df['file_name'].apply(lambda x: x + 'g' if x.endswith('jp') else x)
+            df["file_name"] = df["file_name"].apply(
+                lambda x: x + "g" if x.endswith("jp") else x
+            )
         except Exception as e:
             logger.error(f"Error reading the file {self.source_folder}. {e}")
             raise e
@@ -75,14 +78,20 @@ class IAMImporter(BaseImporter):
             # width, height = self.get_image_width_height(image_path)
 
             # generate a random id like UkpXpzQrEO
-            id = self.generate_random_id()
+            id = generate_random_id()
 
             # create the bbox annotation
             bbox_annotation = {
                 "original_width": width,
                 "original_height": height,
                 "image_rotation": 0,
-                "value": {"x": 0, "y": 0, "width": width, "height": height, "rotation": 0},
+                "value": {
+                    "x": 0,
+                    "y": 0,
+                    "width": width,
+                    "height": height,
+                    "rotation": 0,
+                },
                 "id": id,
                 "from_name": "bbox",
                 "to_name": "image",
@@ -184,18 +193,6 @@ class IAMImporter(BaseImporter):
         img = Image.open(image_path)
         return img.size
 
-    def generate_random_id(self):
-        """
-        Generate a random id.
-
-        Returns:
-            str: The random id.
-        """
-        import random
-        import string
-
-        return "".join(random.choices(string.ascii_uppercase + string.digits, k=10))
-    
     def get_input_action_types(self):
         """
         Get the input and action types of the dataset.
