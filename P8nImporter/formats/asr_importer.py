@@ -6,7 +6,7 @@ import pandas as pd
 
 from ..config.logging import logger
 from .base_importer import BaseImporter
-from ..utilities.importer import generate_random_id
+from ..utilities import generate_random_id
 
 
 class ASRImporter(BaseImporter):
@@ -24,7 +24,7 @@ class ASRImporter(BaseImporter):
             raise Exception("The source must be a csv file.")
 
         try:
-            df = pd.read_csv(self.source_folder, header=None)
+            df = pd.read_csv(self.source_folder, header=0, encoding="utf-8")
         except Exception as e:
             logger.error(f"Error reading the file {self.source_folder}. {e}")
             raise e
@@ -32,19 +32,27 @@ class ASRImporter(BaseImporter):
         # check if the csv has columns filename/file_name and text
         if len(df.columns) < 2:
             raise Exception("The csv file must have at least 2 columns.")
-        if "filename" not in df.columns and "file_name" not in df.columns:
+
+        if "file_name" in df.columns:
+            df.rename(columns={"file_name": "filename"}, inplace=True)
+        elif "file" in df.columns:
+            df.rename(columns={"file": "filename"}, inplace=True)
+        elif "filename" not in df.columns:
             raise Exception(
-                "The csv file must have a column named filename or file_name."
+                "The csv file must have a column named filename or file_name or file."
             )
+
         if "text" not in df.columns:
             raise Exception("The csv file must have a column named text.")
 
+        # remove nan values from the dataframe
+        df = df.dropna(subset=["filename", "text"])
+
         for index, row in df.iterrows():
             parent_directory = os.path.dirname(self.source_folder)
-            audio_path = (
-                row["filename"] if "filename" in df.columns else row["file_name"]
-            )
+            audio_path = row["filename"]
             text = row["text"]
+            print("paths", parent_directory, audio_path, text)
             audio_path = os.path.join(parent_directory, audio_path)
             audio_file = os.path.basename(audio_path)
             target_image_path = os.path.join(self.files_folder, audio_file)

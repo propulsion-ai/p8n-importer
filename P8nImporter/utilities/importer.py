@@ -26,16 +26,3 @@ def setup_importer(format, source_folder, output_folder):
         return ASRImporter(source_folder, output_folder)
     else:
         raise ValueError("Format not supported")
-
-
-def generate_random_id(self):
-    """
-    Generate a random id.
-
-    Returns:
-        str: The random id.
-    """
-    import random
-    import string
-
-    return "".join(random.choices(string.ascii_uppercase + string.digits, k=10))

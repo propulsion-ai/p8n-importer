@@ -74,6 +74,7 @@ The following table lists the formats currently supported by `p8n-importer`, alo
 | coco_json         | COCO JSON            | Image    | Object Detection           | Common Objects in Context, JSON format               |
 | im_classification | Image Classification | Image    | Classification             | Generic image classification datasets                |
 | tabular           | Tabular              | Tabular  | Classification, Regression | Datasets in tabular formats like CSV, Excel, Parquet |
+| iam               | IAM                  | Image    | Character Recognition      | txt file with format "abc.jpg	ABC" on each line. images in "image" folder |
 
 More formats are planned for future releases.
 

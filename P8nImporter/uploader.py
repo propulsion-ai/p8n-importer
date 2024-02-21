@@ -2,7 +2,12 @@
 import json
 import os
 
-from .api.datasets import import_dataset, update_dataset, upload_file, upload_files_in_batches
+from .api.datasets import (
+    import_dataset,
+    update_dataset,
+    upload_file,
+    upload_files_in_batches,
+)
 from tqdm import tqdm
 
 
@@ -62,16 +67,23 @@ def upload_dataset(temp_output_folder, dataset_id, api_key):
             or item["data"].get("audio")
         )
         if file_key:
-            file_path = os.path.join(temp_output_folder, "files", os.path.basename(file_key))
+            file_path = os.path.join(
+                temp_output_folder, "files", os.path.basename(file_key)
+            )
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"File {file_path} does not exist")
             files_to_upload_paths.append(file_path)
 
     # Upload files in batches
-    uploaded_urls_list = upload_files_in_batches(files_to_upload_paths, api_key, dataset_id)
+    uploaded_urls_list = upload_files_in_batches(
+        files_to_upload_paths, api_key, dataset_id
+    )
 
     # Map file names to their uploaded URLs
-    file_urls = {os.path.basename(path): url for path, url in zip(files_to_upload_paths, uploaded_urls_list)}
+    file_urls = {
+        os.path.basename(path): url
+        for path, url in zip(files_to_upload_paths, uploaded_urls_list)
+    }
 
     update_json_data_with_urls(json_data, file_urls)
 
@@ -115,11 +127,11 @@ def upload_dataset(temp_output_folder, dataset_id, api_key):
         with open(metadata_file_path, "r") as metadata_file:
             metadata = json.load(metadata_file)
 
-    payload = {"metadata": metadata}
+        payload = {"metadata": metadata}
 
-    update_response = update_dataset(payload, api_key, dataset_id)
+        update_response = update_dataset(payload, api_key, dataset_id)
 
-    if update_response.status_code != 200:
-        raise Exception(f"Failed to update metadata: {response.text}")
-    else:
-        print(f"Dataset metadata updated successfully.")
+        if update_response.status_code != 200:
+            raise Exception(f"Failed to update metadata: {response.text}")
+        else:
+            print(f"Dataset metadata updated successfully.")

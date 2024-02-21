@@ -9,7 +9,7 @@ import pandas as pd
 from ..config.logging import logger
 from ..formats.base_importer import BaseImporter
 from ..utilities.mapping import generate_labels_mapping
-from ..utilities.importer import generate_random_id
+from ..utilities import generate_random_id
 
 
 class IAMImporter(BaseImporter):
