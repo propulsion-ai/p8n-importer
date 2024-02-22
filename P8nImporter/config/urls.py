@@ -1,13 +1,12 @@
 # config/api_urls.py
 import os
+
 environment = os.environ.get("ENVIRONMENT", "production")
 
-if environment == "production":
-    BASE_URL = "https://api.propulsionhq.com/api/"
-elif environment == "development":
+if environment == "development":
     BASE_URL = "https://npapi.propulsionhq.com/api/"
 else:
-    BASE_URL = "http://localhost:3000/api/"
+    BASE_URL = "https://api.propulsionhq.com/api/"
 
 # Dataset URLs
 DATASET_UPDATE_URL = BASE_URL + "datasets/v1/dataset/{dataset_id}"
