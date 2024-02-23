@@ -1,15 +1,18 @@
 # importing the iam dataset in fwf format
 
+import base64
+import io
 import json
 import os
 import shutil
 
 import pandas as pd
+from PIL import Image
 
 from ..config.logging import logger
 from ..formats.base_importer import BaseImporter
-from ..utilities.mapping import generate_labels_mapping
 from ..utilities import generate_random_id
+from ..utilities.mapping import generate_labels_mapping
 
 
 class IAMImporter(BaseImporter):
@@ -25,6 +28,117 @@ class IAMImporter(BaseImporter):
         self.files_folder = os.path.join(self.output_folder, "files")
         if not os.path.exists(self.files_folder):
             os.makedirs(self.files_folder)
+
+    def import_task(self, image, annotation: str):
+        """
+        Import the IAM task. Save the image in a temporary folder. Make label studio compatible annotation.
+
+        Args:
+            image (Union[bytes, str]): The image in binary, base64, or string path format.
+            annotation (dict): The annotation.
+            label_names (list): The list of label names.
+        """
+        if not image:
+            raise ValueError("Image is required")
+
+        if not annotation:
+            raise ValueError("Annotation is required")
+        elif not isinstance(annotation, str):
+            raise ValueError("Annotation must be a string")
+
+        if isinstance(image, bytes):
+            image = Image.open(io.BytesIO(image))
+        elif isinstance(image, str):
+            if image.startswith("data:image"):
+                _, encoded = image.split(",", 1)
+                image = Image.open(io.BytesIO(base64.b64decode(encoded)))
+            else:
+                image = Image.open(image)
+
+        image_name = os.path.basename(image.filename)
+        image_path = os.path.join(self.files_folder, image_name)
+        image.save(image_path)
+
+        # get the width and height of the image
+        width, height = image.size
+
+        # create the bbox annotation
+        bbox_annotation = {
+            "original_width": width,
+            "original_height": height,
+            "image_rotation": 0,
+            "value": {
+                "x": 0,
+                "y": 0,
+                "width": width,
+                "height": height,
+                "rotation": 0,
+            },
+            "id": id,
+            "from_name": "bbox",
+            "to_name": "image",
+            "type": "rectangle",
+            "origin": "manual",
+        }
+
+        # create the label annotation
+        label_annotation = {
+            "original_width": width,
+            "original_height": height,
+            "image_rotation": 0,
+            "value": {
+                "x": 0,
+                "y": 0,
+                "width": width,
+                "height": height,
+                "rotation": 0,
+                "labels": ["Text"],
+            },
+            "id": id,
+            "from_name": "label",
+            "to_name": "image",
+            "type": "labels",
+            "origin": "manual",
+        }
+
+        # create the transcription annotation
+        transcription_annotation = {
+            "original_width": width,
+            "original_height": height,
+            "image_rotation": 0,
+            "value": {
+                "x": 0,
+                "y": 0,
+                "width": width,
+                "height": height,
+                "rotation": 0,
+                "text": [annotation],
+            },
+            "id": id,
+            "from_name": "transcription",
+            "to_name": "image",
+            "type": "textarea",
+            "origin": "manual",
+        }
+
+        label_studio_json = [
+            {
+                "data": {
+                    "image": os.path.relpath(image_path, self.output_folder),
+                    "annotations": [
+                        bbox_annotation,
+                        label_annotation,
+                        transcription_annotation,
+                    ],
+                },
+            }
+        ]
+
+        output_file = os.path.join(self.output_folder, "dataset.json")
+        with open(output_file, "w") as f:
+            json.dump(label_studio_json, f, indent=4)
+
+        self.generate_metadata(label_studio_json)
 
     def import_dataset(self):
         """
